@@ -10,7 +10,6 @@ template<class T, std::size_t N> class TestAllocatorAccessor;
 namespace allocator
 {
 
-
 const char DEALLOCATE_STATE = 0;
 const char ALLOCATE_STATE = 1;
 
