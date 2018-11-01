@@ -74,7 +74,7 @@ public:
 private:
     template<class T, std::size_t N1> friend class TestAllocatorAccessor;
     void* m_memory = nullptr;
-    void* m_objectsStates = nullptr;
+    void* m_valuesBegin = nullptr;
 };
 
 template<class T, size_t N>
@@ -82,8 +82,6 @@ Allocator<T, N>::~Allocator()
 {
     if(m_memory)
         free(m_memory);
-    if(m_objectsStates)
-        free(m_objectsStates);
 }
 
 template<class T, size_t N>
@@ -93,19 +91,18 @@ typename Allocator<T, N>::pointer Allocator<T, N>::allocate(size_type n, const v
         throw std::bad_alloc();
     if(!m_memory)
     {
-        m_memory = malloc(N * sizeof(T) );
-        assert(!m_objectsStates);
-        m_objectsStates = malloc(N);
-        auto ptr = static_cast<char*>(m_objectsStates);
+        m_memory = malloc(N * (sizeof(T)+1) );
+        m_valuesBegin = static_cast<char*>(m_memory)+N;
+        auto ptr = static_cast<char*>(m_memory);
         for(int i = 0; i < N; ++i)
             *(ptr++) = i < n ? ALLOCATE_STATE : DEALLOCATE_STATE;
-        return static_cast<pointer>(m_memory);
+        return static_cast<pointer>(m_valuesBegin);
     }
     else
     {
-        auto lptr = static_cast<char*>(m_objectsStates);
-        auto rptr = static_cast<char*>(m_objectsStates);
-        auto end = static_cast<char*>(m_objectsStates) + N;
+        auto lptr = static_cast<char*>(m_memory);
+        auto rptr = lptr;
+        auto end = static_cast<char*>(m_valuesBegin);
         while(rptr != end)
         {
             if(*rptr == ALLOCATE_STATE)
@@ -113,8 +110,8 @@ typename Allocator<T, N>::pointer Allocator<T, N>::allocate(size_type n, const v
             else
                 if(++rptr-lptr == n)
                 {
-                    auto result = static_cast<T*>(m_memory) +
-                            (lptr - static_cast<char*>(m_objectsStates) );
+                    auto result = static_cast<T*>(m_valuesBegin) +
+                            (lptr - static_cast<char*>(m_memory) );
                     while(lptr != rptr)
                         *lptr++ = ALLOCATE_STATE;
                     return result;
@@ -127,8 +124,8 @@ typename Allocator<T, N>::pointer Allocator<T, N>::allocate(size_type n, const v
 template<class T, size_t N>
 void Allocator<T, N>::deallocate(pointer p, size_type n)
 {
-    auto shift = p - static_cast<T*>(m_memory);
-    char* lptr = static_cast<char*>(m_objectsStates) + shift;
+    auto shift = p - static_cast<T*>(m_valuesBegin);
+    char* lptr = static_cast<char*>(m_memory) + shift;
     char* rptr = lptr + n;
     while(lptr != rptr)
         *lptr++ = DEALLOCATE_STATE;
