@@ -4,6 +4,8 @@
 #include <cassert>
 #include <new>
 
+template<class T, std::size_t N> class TestAllocatorAccessor;
+
 namespace allocator
 {
 
