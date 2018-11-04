@@ -38,7 +38,7 @@ TEST(SLIST_TEST, slist_custom_allocator_test)
 
 TEST(SLIST_TEST, slist_standard_allocator_test)
 {
-    slist::SList<int, std::allocator<int>> list;
+    slist::SList<int> list;
 
     ASSERT_TRUE(list.isEmpty() );
     ASSERT_NO_THROW(list.addItem(0) );

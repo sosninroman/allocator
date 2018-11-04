@@ -1,7 +1,7 @@
 #ifndef SLIST_H
 #define SLIST_H
 
-#include "allocator.h"
+#include <memory>
 
 namespace slist
 {
@@ -61,12 +61,55 @@ struct SListIterator
     BaseNode* node;
 };
 
-template<class T, class Alloc = allocator::Allocator<T,10>>
+template<class T>
+struct ConstSListIterator
+{
+    typedef std::forward_iterator_tag iterator_category;
+
+    ConstSListIterator() = default;
+
+    explicit ConstSListIterator(BaseNode* node) noexcept
+        : node(node) { }
+
+    const T& operator*() const noexcept
+    {
+        return static_cast<Node<T>*>(node)->value;
+    }
+
+    const T* operator->() const noexcept
+    {
+        return &(static_cast<Node<T>*>(node)->value);
+    }
+
+    ConstSListIterator& operator++() noexcept
+    {
+        node = node->next;
+        return *this;
+    }
+
+    ConstSListIterator operator++(int) noexcept
+    {
+        ConstSListIterator tmp = *this;
+        node = node->next;
+        return tmp;
+    }
+
+    bool operator==(const ConstSListIterator& rhs) const noexcept
+    { return node == rhs.node; }
+
+    bool operator!=(const ConstSListIterator& rhs) const noexcept
+    { return node != rhs.node; }
+
+    BaseNode* node;
+};
+
+template<class T, class Alloc = std::allocator<T>>
 class SList
 {
     using AllocType = typename Alloc::template rebind<Node<T>>::other;
 public:
     typedef SListIterator<T> iterator;
+    typedef ConstSListIterator<T> const_iterator;
 
     SList() = default;
     ~SList()
@@ -101,6 +144,8 @@ public:
 
     iterator begin() {return SListIterator<T>(m_head);}
     iterator end() {return SListIterator<T>();}
+    const_iterator begin() const {return ConstSListIterator<T>(m_head);}
+    const_iterator end() const {return ConstSListIterator<T>();}
 private:
     BaseNode* m_head = nullptr;
     BaseNode* m_tail = nullptr;

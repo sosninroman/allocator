@@ -230,6 +230,33 @@ TEST(ALLOCATOR_TEST, vector_test)
     ASSERT_THROW(values.push_back(4), std::bad_alloc);
 }
 
+TEST(ALLOCATOR_TEST, vector_expand_test)
+{
+    std::vector<int, allocator::Allocator<int, 7, true>> values;
+
+    ASSERT_NO_THROW(values.push_back(0) );
+    ASSERT_NO_THROW(values.push_back(1) );
+    ASSERT_NO_THROW(values.push_back(2) );
+    ASSERT_NO_THROW(values.push_back(3) );
+
+    ASSERT_EQ(values.size(), 4);
+    for(int i = 0; i < values.size(); ++i)
+        ASSERT_EQ(values[i], i);
+
+    //Будет запрос на аллокацию памяти размером allocator::max_size==7
+    //Выделится новый блок памяти
+    ASSERT_NO_THROW(values.push_back(4) );
+    ASSERT_NO_THROW(values.push_back(5) );
+    ASSERT_NO_THROW(values.push_back(6) );
+
+    ASSERT_EQ(values.size(), 7);
+    for(int i = 0; i < values.size(); ++i)
+        ASSERT_EQ(values[i], i);
+
+    //Вектор не сможет выделить памяти > allocator::max_size==7
+    ASSERT_THROW(values.push_back(7), std::length_error);
+}
+
 TEST(ALLOCATOR_TEST, map_test)
 {
     std::map<int, int, std::less<int>, allocator::Allocator<std::pair<const int, int>, 3>> values;
@@ -237,4 +264,14 @@ TEST(ALLOCATOR_TEST, map_test)
     ASSERT_NO_THROW(values.emplace(2,2) );
     ASSERT_NO_THROW(values.emplace(3,3) );
     ASSERT_THROW(values.emplace(4,4), std::bad_alloc);
+}
+
+TEST(ALLOCATOR_TEST, map_expand_test)
+{
+    std::map<int, int, std::less<int>, allocator::Allocator<std::pair<const int, int>, 3, true>> values;
+    ASSERT_NO_THROW(values.emplace(1,1) );
+    ASSERT_NO_THROW(values.emplace(2,2) );
+    ASSERT_NO_THROW(values.emplace(3,3) );
+    ASSERT_NO_THROW(values.emplace(4,4) );
+    ASSERT_NO_THROW(values.emplace(5,5) );
 }
