@@ -29,7 +29,7 @@ public:
         assert(pos >=0 && pos < N);
         if(static_cast<char*>(alloc->m_head->states)[pos] == allocator::DEALLOCATE_STATE)
             throw std::invalid_argument("");
-        return alloc->m_head->memory[pos];
+        return *(reinterpret_cast<T*>(alloc->m_head->memory) + pos);
     }
 
     static bool isNull(allocator::Allocator<T,N>* alloc)

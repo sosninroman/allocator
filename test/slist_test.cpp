@@ -34,6 +34,7 @@ TEST(SLIST_TEST, slist_custom_allocator_test)
     }
 
     ASSERT_NO_THROW(list1.addItem(6) );
+    int a = 1;
 }
 
 TEST(SLIST_TEST, slist_standard_allocator_test)

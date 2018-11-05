@@ -19,7 +19,7 @@ class Allocator
     {
         Chunk* next = nullptr;
         char states[N]; //флаги состояния памяти (свободна или используется)
-        T memory[N]; //память под объекты
+        char memory[N*sizeof(T)]; //память под объекты
     };
 public:
     using size_type = std::size_t;
@@ -66,7 +66,7 @@ public:
     }
 
 private:
-    T* expandAndAllocate(size_type n) noexcept;
+    T* expandAndAllocate(size_type n);
     Chunk* findChunk(pointer p);
 
     template<class T1, std::size_t N1> friend class TestAllocatorAccessor;
@@ -80,19 +80,24 @@ Allocator<T, N, Expand>::~Allocator()
     {
         Chunk* ch = m_head;
         m_head = ch->next;
+        ch->~Chunk();
         free(ch);
     }
 }
 
 template<class T, size_t N, bool Expand>
-T* Allocator<T, N, Expand>::expandAndAllocate(size_type n) noexcept
+T* Allocator<T, N, Expand>::expandAndAllocate(size_type n)
 {
-    Chunk* chk = static_cast<Chunk*>(malloc(sizeof(Chunk) ) );
+    void* chkMem = malloc(sizeof(Chunk) );
+    if(!chkMem)
+        throw std::bad_alloc();
+    Chunk* chk = reinterpret_cast<Chunk*>(chkMem);
+    new(chk) Chunk();
     for(size_t i = 0; i < N; ++i)
         chk->states[i] = i < n ? ALLOCATE_STATE : DEALLOCATE_STATE;
     chk->next = m_head;
     m_head = chk;
-    return m_head->memory;
+    return reinterpret_cast<T*>(m_head->memory);
 }
 
 template<class T, size_t N, bool Expand>
@@ -119,7 +124,7 @@ typename Allocator<T, N, Expand>::pointer Allocator<T, N, Expand>::allocate(size
                 else
                     if(static_cast<size_t>(++rptr-lptr) == n)
                     {
-                        auto result = chk->memory + (lptr - chk->states);
+                        auto result = reinterpret_cast<T*>(chk->memory) + (lptr - chk->states);
                         while(lptr != rptr)
                             *lptr++ = ALLOCATE_STATE;
                         return result;
@@ -144,7 +149,7 @@ typename Allocator<T, N, Expand>::Chunk* Allocator<T, N, Expand>::findChunk(poin
     Chunk* chk = m_head;
     while(chk)
     {
-        pointer ptr = chk->memory;
+        pointer ptr = reinterpret_cast<pointer>(chk->memory);
         for(size_t i = 0; i < N; ++i)
         {
             if(ptr == p)
@@ -161,7 +166,7 @@ void Allocator<T, N, Expand>::deallocate(pointer p, size_type n)
 {
     Chunk* chk = findChunk(p);
     assert(chk);
-    auto shift = p - chk->memory;
+    auto shift = p - reinterpret_cast<pointer>(chk->memory);
     char* lptr = chk->states + shift;
     char* rptr = lptr + n;
     while(lptr != rptr)
