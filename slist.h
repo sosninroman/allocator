@@ -112,6 +112,49 @@ public:
     typedef ConstSListIterator<T> const_iterator;
 
     SList() = default;
+
+    SList(const SList& rhs)
+    {
+        auto ptr = rhs.m_head;
+        while(ptr != nullptr)
+        {
+            addItem(static_cast<Node<T>*>(ptr)->value);
+            ptr = ptr->next;
+        }
+    }
+
+    template<class U, class AllocatorType>
+    SList(const SList<U,AllocatorType>& rhs)
+    {
+        auto ptr = rhs.m_head;
+        while(ptr != nullptr)
+        {
+            addItem(static_cast<Node<T>*>(ptr)->value);
+            ptr = ptr->next;
+        }
+    }
+
+    SList(SList&& rhs) noexcept
+    {
+        auto ptr = rhs.m_head;
+        while(ptr != nullptr)
+        {
+            addItem(std::move(static_cast<Node<T>*>(ptr)->value) );
+            ptr = ptr->next;
+        }
+    }
+
+    template<class U, class AllocatorType>
+    SList(SList<U,AllocatorType>&& rhs) noexcept
+    {
+        auto ptr = rhs.m_head;
+        while(ptr != nullptr)
+        {
+            addItem(std::move(static_cast<Node<T>*>(ptr)->value) );
+            ptr = ptr->next;
+        }
+    }
+
     ~SList()
     {
         while(m_head)
@@ -124,7 +167,7 @@ public:
     }
 
     template<class... Arg>
-    void addItem(Arg... args)
+    void addItem(Arg&&... args)
     {
         auto node = m_alloc.allocate(1);
         m_alloc.construct(node, std::forward<Arg>(args)...);
@@ -146,6 +189,8 @@ public:
     iterator end() {return SListIterator<T>();}
     const_iterator begin() const {return ConstSListIterator<T>(m_head);}
     const_iterator end() const {return ConstSListIterator<T>();}
+
+    template<class T1, class Alloc1> friend class SList;
 private:
     BaseNode* m_head = nullptr;
     BaseNode* m_tail = nullptr;

@@ -34,7 +34,7 @@ int main()
     for(size_t i = 0; i < dataSz; ++i)
         customAllocMap.emplace(i, factorial(i) );
 
-    printContent(standardAllocMap);
+    //printContent(standardAllocMap);
     printContent(customAllocMap);
 
     slist::SList<int> standardAllocSList;
@@ -43,10 +43,18 @@ int main()
 
     slist::SList<int, allocator::Allocator<int, 10>> customAllocSList;
     for(size_t i = 0; i < dataSz; ++i)
-        standardAllocSList.addItem(i);
+        customAllocSList.addItem(i);
 
-    printContent(standardAllocSList);
+    //printContent(standardAllocSList);
     printContent(customAllocSList);
+
+    slist::SList<int> mc2s(std::move(customAllocSList) );
+    std::cout << "slist::SList<int> mc2s(std::move(customAllocSList) ) result" << std::endl;
+    printContent(mc2s);
+
+    slist::SList<int, allocator::Allocator<int,10>> s2c(standardAllocSList);
+    std::cout << "slist::SList<int, allocator::Allocator<int,10>> s2c(standardAllocSList) result" << std::endl;
+    printContent(s2c);
 
     return 0;
 }
