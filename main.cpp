@@ -56,5 +56,9 @@ int main()
     std::cout << "slist::SList<int, allocator::Allocator<int,10>> s2c(standardAllocSList) result" << std::endl;
     printContent(s2c);
 
+    slist::SList<int, allocator::Allocator<int,10>> c2c(std::move(customAllocSList) );
+    std::cout << "slist::SList<int, allocator::Allocator<int,10>> c2c(std::move(customAllocSList) )" << std::endl;
+    printContent(c2c);
+
     return 0;
 }

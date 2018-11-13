@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <new>
+#include <algorithm>
 
 template<class T, std::size_t N> class TestAllocatorAccessor;
 
@@ -41,6 +42,11 @@ public:
     template <class U>
     Allocator(const Allocator<U, N>&) noexcept
     {}
+
+    Allocator(Allocator&& rhs) noexcept
+    {
+        std::swap(rhs.m_head, m_head);
+    }
 
     ~Allocator();
 

@@ -135,13 +135,11 @@ public:
     }
 
     SList(SList&& rhs) noexcept
+        : m_alloc(std::move(rhs.m_alloc))
     {
-        auto ptr = rhs.m_head;
-        while(ptr != nullptr)
-        {
-            addItem(std::move(static_cast<Node<T>*>(ptr)->value) );
-            ptr = ptr->next;
-        }
+        std::swap(m_head, rhs.m_head);
+        std::swap(m_tail, rhs.m_tail);
+
     }
 
     template<class U, class AllocatorType>
